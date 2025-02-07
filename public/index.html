@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Will you be my Valentine?</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"></script>
+
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            background-color: skyblue;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+        img {
+            width: 200px;
+            margin-bottom: 20px;
+        }
+        .btn-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .btn {
+            font-size: 1.5rem;
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            position: absolute;
+        }
+        .yes-btn {
+            background-color: #ff4d4d;
+            color: white;
+            left: 45%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .no-btn {
+            background-color: #cccccc;
+            left: 55%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body>
+
+    <img src="2nd-unscreen.gif" alt="">
+    <h1>Will you be my Valentine? 💖</h1>
+    
+    <div class="btn-container">
+        <button id="yes-btn" class="btn yes-btn">Yes</button>
+        <button id="no-btn" class="btn no-btn">No</button>
+    </div>
+
+    <p id="message"></p>
+
+    <script>
+        const yesBtn = document.getElementById("yes-btn");
+        const noBtn = document.getElementById("no-btn");
+        const message = document.getElementById("message");
+
+        let clickCount = 0;
+        let noClickCount = 0;
+
+        const messages = [
+            "Are you sure?",
+            "What if I asked really nicely?",
+            "Pretty please",
+            "With a tasty sushi",
+            "What about tasty boba",
+            "PLEASE POOKIE",
+            "But:*(",
+            "I am going to die",
+            "Yep I am dead",
+            "Ok ur talking to a ghost",
+            "Please babe",
+            ":(((( ",
+            "Pretty please",
+            "Estoy muerto",
+            "No:("
+        ];
+
+        function moveNoButton() {
+            const maxMove = 30; // Moves slightly
+            let currentLeft = parseFloat(noBtn.style.left) || 55;
+            let currentTop = parseFloat(noBtn.style.top) || 50;
+
+            let newLeft = currentLeft + (Math.random() * maxMove - maxMove / 2);
+            let newTop = currentTop + (Math.random() * maxMove - maxMove / 2);
+
+            // Keep No button inside screen
+            newLeft = Math.max(10, Math.min(90, newLeft));
+            newTop = Math.max(10, Math.min(90, newTop));
+
+            // Check distance from Yes button
+            let yesLeft = parseFloat(yesBtn.style.left) || 45;
+            let yesTop = parseFloat(yesBtn.style.top) || 50;
+
+            let distance = Math.sqrt((newLeft - yesLeft) ** 2 + (newTop - yesTop) ** 2);
+
+            if (distance < 10) {
+                // If too close, move No button slightly away
+                newLeft += (newLeft > yesLeft) ? 5 : -5;
+                newTop += (newTop > yesTop) ? 5 : -5;
+            }
+
+            noBtn.style.left = `${newLeft}%`;
+            noBtn.style.top = `${newTop}%`;
+        }
+
+        noBtn.addEventListener("click", () => {
+            clickCount++;
+            noClickCount++;
+
+            if (noClickCount < messages.length) {
+                noBtn.textContent = messages[noClickCount];
+            } else {
+                noBtn.textContent = "Really? 😢";  // Final message
+            }
+
+            moveNoButton();
+
+            let scaleFactor = 1 + clickCount * 0.1;
+            yesBtn.style.transform = `scale(${scaleFactor})`;
+
+            if (scaleFactor >= 5) {
+                noBtn.style.display = "none";
+                message.innerText = "No escape now! 😈";
+            }
+
+            // Send data to Firebase (via your server)
+            fetch("/api/click", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ button: "No" })  // Sending 'No' when the 'No' button is clicked
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+        });
+
+        yesBtn.addEventListener("click", () => {
+            document.body.innerHTML = `
+                <img src="bear-kiss-bear-kisses.gif">
+                <h1>Yay! I love you, baby! ❤️🥰</h1>
+            `;
+            
+            // Send data to Firebase (via your server)
+            fetch("/api/click", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ button: "Yes" })  // Sending 'Yes' when the 'Yes' button is clicked
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+        });
+    </script>
+</body>
+</html>
